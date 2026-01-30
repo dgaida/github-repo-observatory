@@ -18,6 +18,9 @@ class QualityService:
             if "codeql" in url_lower:
                 if "CodeQL" not in tools:
                     tools.append("CodeQL")
+            if "codecov" in url_lower:
+                if "Codecov" not in tools:
+                    tools.append("Codecov")
 
         return tools
 

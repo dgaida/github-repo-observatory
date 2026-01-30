@@ -9,6 +9,11 @@ setup_logging()
 
 app = FastAPI(title="GitHub Repo Observatory")
 
+@app.on_event("shutdown")
+async def shutdown_event():
+    from .services.github_client import github_client
+    await github_client.close()
+
 # Mount static files
 static_path = os.path.join(os.path.dirname(__file__), "frontend", "static")
 if not os.path.exists(static_path):

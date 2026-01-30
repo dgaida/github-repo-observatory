@@ -25,8 +25,10 @@ async def test_get_quality_tools():
     with patch("app.services.quality_service.BadgeService.get_all_badges") as mock_badges:
         mock_badges.return_value = [
             "https://img.shields.io/badge/sonarcloud-passed-blue",
-            "https://img.shields.io/badge/codeql-active-green"
+            "https://img.shields.io/badge/codeql-active-green",
+            "https://img.shields.io/codecov/c/github/user/repo"
         ]
         tools = await QualityService.get_quality_tools("owner", "repo")
         assert "SonarCloud" in tools
         assert "CodeQL" in tools
+        assert "Codecov" in tools

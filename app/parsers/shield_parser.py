@@ -27,15 +27,31 @@ class ShieldParser:
                 "type": "workflow_status"
             }
 
+        # Codecov via Shields: /codecov/c/github/<USER>/<REPO>
+        if "/codecov/c/" in url:
+            return {
+                "label": "coverage",
+                "type": "codecov"
+            }
+
         return None
 
     @staticmethod
     def extract_coverage(url: str) -> Optional[float]:
         """Extracts coverage percentage from a badge URL."""
         data = ShieldParser.parse_badge_url(url)
-        if data and "coverage" in data["label"].lower():
-            msg = data["message"]
-            match = re.search(r'(\d+(?:\.\d+)?)', msg)
-            if match:
-                return float(match.group(1))
+        if not data:
+            return None
+
+        if "coverage" in data.get("label", "").lower():
+            if "message" in data:
+                msg = data["message"]
+                match = re.search(r'(\d+(?:\.\d+)?)', msg)
+                if match:
+                    return float(match.group(1))
+
+            # If it's a dynamic badge (like Codecov via Shields), we might not have the message
+            # in the URL itself. This would require fetching the badge or using dynamic extraction.
+            # For now, we only support static badges or badges with the value in the URL.
+
         return None
