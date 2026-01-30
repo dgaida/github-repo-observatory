@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitHub Repo Observatory</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <h1>GitHub Repo Observatory</h1>
+
+    <div class="search-box">
+        <form action="/" method="get">
+            <input type="text" name="username" placeholder="GitHub username" value="{{ username or '' }}">
+
+            <select name="sort_by">
+                <option value="">Sort by...</option>
+                <option value="coverage" {% if sort_by == 'coverage' %}selected{% endif %}>Coverage</option>
+                <option value="status" {% if sort_by == 'status' %}selected{% endif %}>Status</option>
+                <option value="last_commit" {% if sort_by == 'last_commit' %}selected{% endif %}>Last Commit</option>
+            </select>
+
+            <select name="filter_test">
+                <option value="">Tests...</option>
+                <option value="pass" {% if filter_test == 'pass' %}selected{% endif %}>Passing</option>
+                <option value="fail" {% if filter_test == 'fail' %}selected{% endif %}>Failing</option>
+            </select>
+
+            <select name="filter_quality">
+                <option value="">Quality...</option>
+                <option value="pass" {% if filter_quality == 'pass' %}selected{% endif %}>With Tools</option>
+                <option value="fail" {% if filter_quality == 'fail' %}selected{% endif %}>No Tools</option>
+            </select>
+
+            <select name="filter_codeql">
+                <option value="">CodeQL...</option>
+                <option value="pass" {% if filter_codeql == 'pass' %}selected{% endif %}>Active</option>
+                <option value="fail" {% if filter_codeql == 'fail' %}selected{% endif %}>Failing</option>
+                <option value="none" {% if filter_codeql == 'none' %}selected{% endif %}>None</option>
+            </select>
+
+            <button type="submit">Apply</button>
+        </form>
+    </div>
+
+    <div id="repos-container">
+        {% for repo in repos %}
+        <div class="repo-card">
+            <div class="repo-name">
+                <a href="{{ repo.html_url }}" target="_blank">{{ repo.full_name }}</a>
+            </div>
+            <div class="repo-description">{{ repo.description or 'No description' }}</div>
+
+            <div class="commit-info" style="font-size: 0.8rem; color: #666; margin-bottom: 10px;">
+                <span>Commits: {{ repo.metrics.commit_count or 0 }}</span> |
+                <span>Last commit: {{ repo.metrics.last_commit_at[:10] if repo.metrics.last_commit_at else 'N/A' }}</span>
+            </div>
+
+            <div class="metrics" style="margin-bottom: 15px;">
+                <div class="metric {% if repo.metrics.build_status == 'success' %}status-success{% elif repo.metrics.build_status == 'failure' %}status-failure{% else %}status-unknown{% endif %}">
+                    Build: {{ repo.metrics.build_status }}
+                </div>
+                {% if repo.metrics.coverage_percentage is not none %}
+                <div class="metric status-success">
+                    Coverage: {{ repo.metrics.coverage_percentage }}%
+                </div>
+                {% endif %}
+                <div class="metric {% if repo.metrics.codeql_status == 'active' %}status-success{% else %}status-unknown{% endif %}">
+                    CodeQL: {{ repo.metrics.codeql_status }}
+                </div>
+                {% if repo.metrics.quality_tools %}
+                <div class="metric">
+                    Quality:
+                    {% for tool in repo.metrics.quality_tools %}
+                        <span class="badge">{{ tool }}</span>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="badges" style="display: flex; flex-wrap: wrap; gap: 5px;">
+                {% for badge_url in repo.metrics.readme_badges %}
+                    <img src="{{ badge_url }}" alt="badge" style="max-height: 20px;">
+                {% endfor %}
+            </div>
+        </div>
+        {% else %}
+        <p>No repositories found.</p>
+        {% endfor %}
+    </div>
+</body>
+</html>
