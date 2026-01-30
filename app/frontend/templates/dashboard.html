@@ -56,27 +56,6 @@
                 <span>Last commit: {{ repo.metrics.last_commit_at[:10] if repo.metrics.last_commit_at else 'N/A' }}</span>
             </div>
 
-            <div class="metrics" style="margin-bottom: 15px;">
-                <div class="metric {% if repo.metrics.build_status == 'success' %}status-success{% elif repo.metrics.build_status == 'failure' %}status-failure{% else %}status-unknown{% endif %}">
-                    Build: {{ repo.metrics.build_status }}
-                </div>
-                {% if repo.metrics.coverage_percentage is not none %}
-                <div class="metric status-success">
-                    Coverage: {{ repo.metrics.coverage_percentage }}%
-                </div>
-                {% endif %}
-                <div class="metric {% if repo.metrics.codeql_status == 'active' %}status-success{% else %}status-unknown{% endif %}">
-                    CodeQL: {{ repo.metrics.codeql_status }}
-                </div>
-                {% if repo.metrics.quality_tools %}
-                <div class="metric">
-                    Quality:
-                    {% for tool in repo.metrics.quality_tools %}
-                        <span class="badge">{{ tool }}</span>
-                    {% endfor %}
-                </div>
-                {% endif %}
-            </div>
 
             <div class="badges" style="display: flex; flex-wrap: wrap; gap: 5px;">
                 {% for badge_url in repo.metrics.readme_badges %}

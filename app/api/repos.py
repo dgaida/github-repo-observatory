@@ -56,11 +56,11 @@ async def fetch_repo_metrics(repo_dict):
 
 @router.get("/repos", response_model=List[Repository])
 async def list_repos(
-    username: Optional[str] = Query(None),
-    sort_by: Optional[str] = Query(None), # coverage, status, last_commit
-    filter_test: Optional[str] = Query(None), # pass, fail
-    filter_quality: Optional[str] = Query(None), # pass, fail (simplified)
-    filter_codeql: Optional[str] = Query(None) # pass, fail, none
+    username: Optional[str] = None,
+    sort_by: Optional[str] = None, # coverage, status, last_commit
+    filter_test: Optional[str] = None, # pass, fail
+    filter_quality: Optional[str] = None, # pass, fail (simplified)
+    filter_codeql: Optional[str] = None # pass, fail, none
 ):
     cache_key = f"repos_{username or 'authed'}"
     cached_repositories = ttl_cache.get(cache_key)
@@ -109,11 +109,19 @@ async def list_repos(
 
     # Apply Sorting
     if sort_by == "coverage":
-        repositories.sort(key=lambda r: r.metrics.coverage_percentage or 0, reverse=True)
+        repositories.sort(
+            key=lambda r: (r.metrics.coverage_percentage if r.metrics else 0) or 0,
+            reverse=True
+        )
     elif sort_by == "status":
         status_order = {"success": 0, "in_progress": 1, "unknown": 2, "failure": 3}
-        repositories.sort(key=lambda r: status_order.get(r.metrics.build_status, 4))
+        repositories.sort(
+            key=lambda r: status_order.get(r.metrics.build_status if r.metrics else "unknown", 4)
+        )
     elif sort_by == "last_commit":
-        repositories.sort(key=lambda r: r.metrics.last_commit_at or "", reverse=True)
+        repositories.sort(
+            key=lambda r: (r.metrics.last_commit_at if r.metrics else "") or "",
+            reverse=True
+        )
 
     return repositories
