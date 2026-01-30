@@ -43,15 +43,13 @@ class ShieldParser:
         if not data:
             return None
 
-        if "coverage" in data.get("label", "").lower():
+        label = data.get("label", "").lower()
+        if "coverage" in label or label == "cov":
             if "message" in data:
                 msg = data["message"]
+                # Look for numbers (possibly with decimals) in the message
                 match = re.search(r'(\d+(?:\.\d+)?)', msg)
                 if match:
                     return float(match.group(1))
-
-            # If it's a dynamic badge (like Codecov via Shields), we might not have the message
-            # in the URL itself. This would require fetching the badge or using dynamic extraction.
-            # For now, we only support static badges or badges with the value in the URL.
 
         return None

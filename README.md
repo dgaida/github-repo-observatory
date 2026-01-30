@@ -1,5 +1,13 @@
 # GitHub Repo Observatory
 
+[![codecov](https://codecov.io/gh/dgaida/github-repo-observatory/branch/main/graph/badge.svg)](https://codecov.io/gh/dgaida/github-repo-observatory)
+[![tests](https://github.com/dgaida/github-repo-observatory/actions/workflows/ci.yml/badge.svg)](https://github.com/dgaida/github-repo-observatory/actions/workflows/ci.yml)
+[![codeql](https://github.com/dgaida/github-repo-observatory/actions/workflows/codeql.yml/badge.svg)](https://github.com/dgaida/github-repo-observatory/actions/workflows/codeql.yml)
+[![code quality](https://img.shields.io/badge/code%20quality-A-brightgreen)](https://github.com/dgaida/github-repo-observatory)
+[![python](https://img.shields.io/badge/python-3.10%2B-blue)](https://github.com/dgaida/github-repo-observatory)
+[![license](https://img.shields.io/badge/license-MIT-blue)](https://github.com/dgaida/github-repo-observatory/blob/main/LICENSE)
+[![code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+
 **GitHub Repo Observatory** is a web-based dashboard that automatically analyzes all GitHub repositories of a user and aggregates CI health, test results, coverage, and code quality metrics into a single, continuously updated overview.
 
 The service is fully hosted (no local startup required) and is intended for maintainers, educators, and teams who want a clear, high-level view of the technical health of their repositories.
