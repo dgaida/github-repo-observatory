@@ -1,35 +1,34 @@
 import asyncio
-from fastapi import APIRouter, Query
-from typing import List, Optional
+from fastapi import APIRouter, Depends
+from typing import List, Optional, Dict, Any
 from ..models.repo import Repository
 from ..models.metrics import RepoMetrics
+from ..models.requests import RepoListQuery
+from ..models.enums import BuildStatus, CodeQLStatus, FilterValue
 from ..services.github_client import github_client
 from ..services.actions_service import ActionsService
 from ..services.coverage_service import CoverageService
 from ..services.quality_service import QualityService
+from ..services.badge_service import BadgeService
 from ..cache.ttl_cache import ttl_cache
 
 router = APIRouter()
 
-from ..services.badge_service import BadgeService
-
-async def fetch_repo_metrics(repo_dict):
+async def fetch_repo_metrics(repo_dict: Dict[str, Any]) -> Repository:
+    """Enriches a repository with metrics."""
     owner = repo_dict["owner"]["login"]
     name = repo_dict["name"]
 
-    # Fetch metrics in parallel for each repo
-    build_status_task = ActionsService.get_build_status(owner, name)
-    coverage_task = CoverageService.get_coverage(owner, name)
-    quality_tools_task = QualityService.get_quality_tools(owner, name)
-    codeql_status_task = QualityService.get_codeql_status(owner, name)
-    badges_task = BadgeService.get_all_badges(owner, name)
-    last_commit_task = github_client.get_last_commit(owner, name)
-    commit_count_task = github_client.get_commit_count(owner, name)
-
+    # Fetch metrics in parallel
     (build_status, coverage, quality_tools, codeql_status,
      badges, last_commit, commit_count) = await asyncio.gather(
-        build_status_task, coverage_task, quality_tools_task, codeql_status_task,
-        badges_task, last_commit_task, commit_count_task
+        ActionsService.get_build_status(owner, name),
+        CoverageService.get_coverage(owner, name),
+        QualityService.get_quality_tools(owner, name),
+        QualityService.get_codeql_status(owner, name),
+        BadgeService.get_all_badges(owner, name),
+        github_client.get_last_commit(owner, name),
+        github_client.get_commit_count(owner, name)
     )
 
     last_commit_at = None
@@ -40,7 +39,9 @@ async def fetch_repo_metrics(repo_dict):
         build_status=build_status,
         coverage_percentage=coverage,
         quality_tools=quality_tools,
-        codeql_status=codeql_status,
+        codeql_status=CodeQLStatus.ACTIVE if codeql_status == "active" else (
+            CodeQLStatus.FAILURE if codeql_status == "failure" else CodeQLStatus.NONE
+        ),
         last_commit_at=last_commit_at,
         commit_count=commit_count,
         readme_badges=badges
@@ -54,74 +55,95 @@ async def fetch_repo_metrics(repo_dict):
         metrics=metrics
     )
 
-@router.get("/repos", response_model=List[Repository])
-async def list_repos(
-    username: Optional[str] = None,
-    sort_by: Optional[str] = None, # coverage, status, last_commit
-    filter_test: Optional[str] = None, # pass, fail
-    filter_quality: Optional[str] = None, # pass, fail (simplified)
-    filter_codeql: Optional[str] = None # pass, fail, none
-):
+async def _fetch_repos_from_cache_or_api(username: Optional[str]) -> List[Repository]:
+    """Fetches repositories from cache or API."""
     cache_key = f"repos_{username or 'authed'}"
-    cached_repositories = ttl_cache.get(cache_key)
+    cached = ttl_cache.get(cache_key)
 
-    if not cached_repositories:
-        try:
-            repos_data = await github_client.get_user_repos(username)
+    if cached:
+        return list(cached)
 
-            # Determine target user login for filtering
-            if username:
-                target_login = username
-            else:
-                user_info = await github_client.get_authenticated_user()
-                target_login = user_info["login"]
+    repos_data = await _fetch_user_repos_data(username)
+    repositories = await asyncio.gather(*[fetch_repo_metrics(r) for r in repos_data])
+    ttl_cache.set(cache_key, repositories)
+    return list(repositories)
 
-            # Filter repos that belong to the user
-            repos_data = [r for r in repos_data if r["owner"]["login"].lower() == target_login.lower()]
+async def _fetch_user_repos_data(username: Optional[str]) -> List[Dict[str, Any]]:
+    """Fetches repository data from GitHub API and filters by user."""
+    repos_data = await github_client.get_user_repos(username)
 
-            # Process all repositories in parallel
-            cached_repositories = await asyncio.gather(*[fetch_repo_metrics(r) for r in repos_data])
-            ttl_cache.set(cache_key, cached_repositories)
-        except Exception:
-            cached_repositories = []
+    if username:
+        target_login = username
+    else:
+        user_info = await github_client.get_authenticated_user()
+        target_login = user_info.get("login", "")
 
-    repositories = list(cached_repositories)
+    return [
+        r for r in repos_data
+        if r["owner"]["login"].lower() == target_login.lower()
+    ]
 
-    # Apply Filtering
+def _apply_filters(
+    repositories: List[Repository],
+    filter_test: Optional[FilterValue],
+    filter_quality: Optional[FilterValue],
+    filter_codeql: Optional[FilterValue]
+) -> List[Repository]:
+    """Applies filters to the repository list."""
     if filter_test:
         repositories = [r for r in repositories if r.metrics and (
-            (filter_test == "pass" and r.metrics.build_status == "success") or
-            (filter_test == "fail" and r.metrics.build_status == "failure")
+            (filter_test == FilterValue.PASS and r.metrics.build_status == BuildStatus.SUCCESS) or
+            (filter_test == FilterValue.FAIL and r.metrics.build_status == BuildStatus.FAILURE)
         )]
 
     if filter_codeql:
         repositories = [r for r in repositories if r.metrics and (
-            (filter_codeql == "pass" and r.metrics.codeql_status == "active") or
-            (filter_codeql == "fail" and r.metrics.codeql_status == "failure") or
-            (filter_codeql == "none" and r.metrics.codeql_status == "none")
+            (filter_codeql == FilterValue.PASS and r.metrics.codeql_status == CodeQLStatus.ACTIVE) or
+            (filter_codeql == FilterValue.FAIL and r.metrics.codeql_status == CodeQLStatus.FAILURE) or
+            (filter_codeql == FilterValue.NONE and r.metrics.codeql_status == CodeQLStatus.NONE)
         )]
 
     if filter_quality:
         repositories = [r for r in repositories if r.metrics and (
-            (filter_quality == "pass" and len(r.metrics.quality_tools) > 0) or
-            (filter_quality == "fail" and len(r.metrics.quality_tools) == 0)
+            (filter_quality == FilterValue.PASS and len(r.metrics.quality_tools) > 0) or
+            (filter_quality == FilterValue.FAIL and len(r.metrics.quality_tools) == 0)
         )]
 
-    # Apply Sorting
+    return repositories
+
+def _apply_sorting(
+    repositories: List[Repository],
+    sort_by: Optional[str]
+) -> List[Repository]:
+    """Sorts the repository list."""
     if sort_by == "coverage":
         repositories.sort(
             key=lambda r: (r.metrics.coverage_percentage if r.metrics else 0) or 0,
             reverse=True
         )
     elif sort_by == "status":
-        status_order = {"success": 0, "in_progress": 1, "unknown": 2, "failure": 3}
+        status_order = {
+            BuildStatus.SUCCESS: 0,
+            BuildStatus.IN_PROGRESS: 1,
+            BuildStatus.UNKNOWN: 2,
+            BuildStatus.FAILURE: 3
+        }
         repositories.sort(
-            key=lambda r: status_order.get(r.metrics.build_status if r.metrics else "unknown", 4)
+            key=lambda r: status_order.get(r.metrics.build_status if r.metrics else BuildStatus.UNKNOWN, 4)
         )
     elif sort_by == "last_commit":
         repositories.sort(
             key=lambda r: (r.metrics.last_commit_at if r.metrics else "") or "",
             reverse=True
         )
+    return repositories
 
+@router.get("/repos", response_model=List[Repository])
+async def list_repos(query: RepoListQuery = Depends()):
+    """Lists all repositories with metrics."""
+    repositories = await _fetch_repos_from_cache_or_api(query.username)
+    repositories = _apply_filters(
+        repositories, query.filter_test, query.filter_quality, query.filter_codeql
+    )
+    repositories = _apply_sorting(repositories, query.sort_by)
     return repositories

@@ -8,9 +8,42 @@
 [![license](https://img.shields.io/badge/license-MIT-blue)](https://github.com/dgaida/github-repo-observatory/blob/main/LICENSE)
 [![code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
-**GitHub Repo Observatory** is a web-based dashboard that automatically analyzes all GitHub repositories of a user and aggregates CI health, test results, coverage, and code quality metrics into a single, continuously updated overview.
+**One-line description**: Monitor CI health, test coverage, and code quality across all your GitHub repos in a single dashboard.
 
-The service is fully hosted (no local startup required) and is intended for maintainers, educators, and teams who want a clear, high-level view of the technical health of their repositories.
+---
+
+## 🚀 Quick Start
+
+### For Users (Hosted Version)
+1. Visit [observatory.example.com](https://observatory.example.com) (Placeholder)
+2. Enter your GitHub username
+3. View your repository health dashboard
+
+### For Developers (Local Setup)
+```bash
+# Clone & install
+git clone https://github.com/dgaida/github-repo-observatory.git
+cd github-repo-observatory
+pip install -r requirements.txt
+
+# Configure
+export GITHUB_TOKEN=ghp_your_token_here
+
+# Run
+uvicorn app.main:app --reload
+```
+
+## 📋 Prerequisites
+- Python 3.10+
+- GitHub Personal Access Token (read-only, public repos)
+
+## ⚙️ Configuration
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `GITHUB_TOKEN` | Yes | - | GitHub PAT with `repo` scope |
+| `APP_PORT` | No | 10000 | Server port |
+| `CACHE_TTL` | No | 3600 | Cache duration in seconds |
+| `LOG_LEVEL` | No | INFO | Logging level |
 
 ---
 
@@ -39,72 +72,15 @@ This structure is designed to scale as new metrics and data sources are added.
 
 ---
 
-## Metrics Collected
-
-For each repository, the dashboard collects:
-
-- Repository name and link
-- Build / workflow status
-- Number of failing tests (when detectable)
-- Test coverage (parsed from coverage badges)
-- Presence and status of CodeQL analysis
-- Presence of code quality tools (e.g. SonarCloud, Code Climate)
-
-> The tool assumes that repositories use GitHub Actions and expose relevant badges in their `README.md`.
-
----
-
-## Deployment (Render)
-
-The application is designed to run on **Render** as a managed web service.
-
-### Requirements
-
-- Python 3.10+
-- A GitHub Personal Access Token (read-only)
-
-### Environment Variables
-
-Set the following environment variable in Render:
-
-```
-GITHUB_TOKEN=ghp_xxxxxxxxxxxxxxxxxxxx
-```
-
-The token requires **read-only access** to public repositories.
-
-### Start Command
-
-```
-uvicorn app.main:app --host 0.0.0.0 --port 10000
-```
-
-### Build Command
-
-```
-pip install -r requirements.txt
+## 🧪 Running Tests
+```bash
+export PYTHONPATH=$PYTHONPATH:.
+pytest
 ```
 
 ---
 
-## Local Development (Optional)
-
-Although the project is intended to run hosted, it can also be started locally:
-
-```
-export GITHUB_TOKEN=ghp_xxx
-uvicorn app.main:app --reload
-```
-
-Then open:
-
-```
-http://localhost:8000
-```
-
----
-
-## Project Structure
+## 🏗️ Project Structure
 
 ```
 github-repo-observatory/
@@ -126,7 +102,8 @@ github-repo-observatory/
 │   │
 │   ├── models/                 # Domain and metric models
 │   │   ├── repo.py
-│   │   └── metrics.py
+│   │   ├── metrics.py
+│   │   └── enums.py            # Status and filter enums
 │   │
 │   ├── parsers/                # README, badge, and log parsing
 │   │   ├── readme_parser.py
@@ -134,7 +111,6 @@ github-repo-observatory/
 │   │   └── action_logs.py
 │   │
 │   ├── cache/                  # Caching and rate-limit protection
-│   │   ├── memory_cache.py
 │   │   └── ttl_cache.py
 │   │
 │   ├── frontend/               # Dashboard UI
@@ -156,25 +132,17 @@ github-repo-observatory/
 
 ---
 
-## Roadmap
-
-- Numeric coverage extraction from Shields.io badges
-- Accurate failing test counts via workflow log analysis
-- Sorting and filtering in the dashboard
-- CSV / JSON export of metrics
-- Organization-wide and multi-user support
+## 🐛 Troubleshooting
+**"GitHub API rate limit exceeded"**
+- Ensure your `GITHUB_TOKEN` is set correctly
+- Authenticated requests have 5000/hour limit vs 60/hour
 
 ---
 
-## Use Cases
-
-- Continuous quality monitoring of personal or organizational repositories
-- CI health overview for teaching and academic projects
-- Early detection of broken pipelines and missing quality checks
+## 🤝 Contributing
+See [CONTRIBUTING.md](CONTRIBUTING.md) (Placeholder) for guidelines.
 
 ---
 
-## License
-
-MIT License
-
+## 📝 License
+MIT License - see [LICENSE](LICENSE)
