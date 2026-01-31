@@ -1,0 +1,32 @@
+name: Cleanup closed PR branches
+
+on:
+  schedule:
+    # Runs once per day at 02:00 UTC
+    - cron: "0 2 * * *"
+  workflow_dispatch:
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Delete branches from closed PRs
+        uses: jessfraz/branch-cleaner-action@v1.3.0
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+
+          # Only delete branches whose PRs are closed
+          delete-closed-pr: true
+
+          # Do NOT touch branches with open PRs
+          delete-open-pr: false
+
+          # Wait at least 2 days after PR close
+          minimum-age-days: 2
+
+          # Safety: never delete protected branches
+          protected-branches: |
+            main
+            master
+            develop
