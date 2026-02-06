@@ -12,21 +12,48 @@ jobs:
 
     steps:
       - name: Delete branches from closed PRs
-        uses: jessfraz/branch-cleaner-action@v1.3.0
+        uses: actions/github-script@v6
         with:
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const { data: closedPrs } = await github.rest.pulls.list({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'closed',
+              per_page: 100
+            });
 
-          # Only delete branches whose PRs are closed
-          delete-closed-pr: true
+            const now = new Date();
+            const threshold = new Date(now.getTime() - (2 * 24 * 60 * 60 * 1000)); // 2 days ago
+            const protectedBranches = ['main', 'master', 'develop'];
 
-          # Do NOT touch branches with open PRs
-          delete-open-pr: false
+            console.log(`Checking ${closedPrs.length} closed PRs...`);
 
-          # Wait at least 2 days after PR close
-          minimum-age-days: 2
+            for (const pr of closedPrs) {
+              const closedAt = new Date(pr.closed_at);
 
-          # Safety: never delete protected branches
-          protected-branches: |
-            main
-            master
-            develop
+              if (closedAt < threshold) {
+                const branchName = pr.head.ref;
+                const headRepo = pr.head.repo;
+
+                // Only delete branches that belong to this repo and are not protected
+                if (headRepo && headRepo.full_name === `${context.repo.owner}/${context.repo.repo}` && !protectedBranches.includes(branchName)) {
+                  try {
+                    await github.rest.git.deleteRef({
+                      owner: context.repo.owner,
+                      repo: context.repo.repo,
+                      ref: `heads/${branchName}`
+                    });
+                    console.log(`Deleted branch: ${branchName} (PR #${pr.number})`);
+                  } catch (error) {
+                    // 422: Reference does not exist (already deleted)
+                    // 404: Not Found
+                    if (error.status !== 422 && error.status !== 404) {
+                      console.error(`Failed to delete branch ${branchName}: ${error.message}`);
+                    } else {
+                      console.log(`Branch ${branchName} already deleted.`);
+                    }
+                  }
+                }
+              }
+            }
