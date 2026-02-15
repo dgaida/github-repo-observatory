@@ -72,6 +72,23 @@ This structure is designed to scale as new metrics and data sources are added.
 
 ---
 
+## 🚀 Deployment
+
+### Automatic Deployment to Render
+The repository includes a GitHub Action to automatically deploy to [Render.com](https://render.com) on every push to the `main` branch.
+
+**Setup:**
+1. In your Render Dashboard, go to your service's **Settings** tab.
+2. Scroll down to the **Deploy Hook** section and copy the URL.
+   - It will look like `https://api.render.com/deploy/srv-<SERVICE_ID>?key=<TOKEN>`.
+   - Yes, the service ID part starts with `srv-`.
+3. In your GitHub repository, go to **Settings > Secrets and variables > Actions**.
+4. Click **New repository secret** and add:
+   - **Name**: `RENDER_DEPLOY_HOOK_URL`
+   - **Value**: (The URL you copied from Render)
+
+---
+
 ## 🧪 Running Tests
 ```bash
 export PYTHONPATH=$PYTHONPATH:.
