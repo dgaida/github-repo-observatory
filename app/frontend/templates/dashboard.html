@@ -48,6 +48,11 @@
         <div class="repo-card">
             <div class="repo-name">
                 <a href="{{ repo.html_url }}" target="_blank">{{ repo.full_name }}</a>
+                {% if repo.pages_url %}
+                <span class="pages-link" style="font-size: 0.8rem; margin-left: 10px;">
+                    <a href="{{ repo.pages_url }}" target="_blank" title="GitHub Pages">🌐 View Pages</a>
+                </span>
+                {% endif %}
             </div>
             <div class="repo-description">{{ repo.description or 'No description' }}</div>
 

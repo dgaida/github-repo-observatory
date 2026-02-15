@@ -30,3 +30,4 @@ class RepositoryData(TypedDict):
     html_url: str
     description: Optional[str]
     owner: GitHubUser
+    has_pages: bool

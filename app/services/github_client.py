@@ -107,4 +107,14 @@ class GitHubClient:
 
         return len(response.json())
 
+    @handle_github_api_errors(default_return=None)
+    async def get_pages_url(self, owner: str, repo: str) -> Optional[str]:
+        """Fetch the GitHub Pages URL for a repository.
+
+        Returns:
+            The GitHub Pages URL as a string, or None if not found/accessible.
+        """
+        data = await self._get(f"repos/{owner}/{repo}/pages")
+        return data.get("html_url")
+
 github_client = GitHubClient()
