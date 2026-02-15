@@ -22,3 +22,13 @@ async def test_get_last_commit():
 
         commit = await client.get_last_commit("owner", "repo")
         assert commit["commit"]["committer"]["date"] == "2024-01-01T00:00:00Z"
+
+@pytest.mark.asyncio
+async def test_get_pages_url():
+    client = GitHubClient()
+    with patch.object(client, "_get", new_callable=AsyncMock) as mock_get:
+        mock_get.return_value = {"html_url": "https://owner.github.io/repo/"}
+
+        url = await client.get_pages_url("owner", "repo")
+        assert url == "https://owner.github.io/repo/"
+        mock_get.assert_called_once_with("repos/owner/repo/pages")

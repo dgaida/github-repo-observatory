@@ -21,14 +21,15 @@ async def fetch_repo_metrics(repo_dict: Dict[str, Any]) -> Repository:
 
     # Fetch metrics in parallel
     (build_status, coverage, quality_tools, codeql_status,
-     badges, last_commit, commit_count) = await asyncio.gather(
+     badges, last_commit, commit_count, pages_url) = await asyncio.gather(
         ActionsService.get_build_status(owner, name),
         CoverageService.get_coverage(owner, name),
         QualityService.get_quality_tools(owner, name),
         QualityService.get_codeql_status(owner, name),
         BadgeService.get_all_badges(owner, name),
         github_client.get_last_commit(owner, name),
-        github_client.get_commit_count(owner, name)
+        github_client.get_commit_count(owner, name),
+        github_client.get_pages_url(owner, name) if repo_dict.get("has_pages") else asyncio.sleep(0)
     )
 
     last_commit_at = None
@@ -51,6 +52,7 @@ async def fetch_repo_metrics(repo_dict: Dict[str, Any]) -> Repository:
         name=name,
         full_name=repo_dict["full_name"],
         html_url=repo_dict["html_url"],
+        pages_url=pages_url,
         description=repo_dict.get("description"),
         metrics=metrics
     )
