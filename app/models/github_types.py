@@ -29,5 +29,6 @@ class RepositoryData(TypedDict):
     full_name: str
     html_url: str
     description: Optional[str]
+    homepage: Optional[str]
     owner: GitHubUser
     has_pages: bool

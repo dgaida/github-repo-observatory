@@ -52,7 +52,7 @@ async def fetch_repo_metrics(repo_dict: Dict[str, Any]) -> Repository:
         name=name,
         full_name=repo_dict["full_name"],
         html_url=repo_dict["html_url"],
-        pages_url=pages_url,
+        pages_url=pages_url or repo_dict.get("homepage"),
         description=repo_dict.get("description"),
         metrics=metrics
     )
