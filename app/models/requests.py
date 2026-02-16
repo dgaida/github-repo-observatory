@@ -1,12 +1,7 @@
 from pydantic import BaseModel, Field, field_validator, BeforeValidator
-from typing import Optional, Literal, Any, Annotated
+from typing import Optional, Literal, Annotated
 from .enums import FilterValue
-
-def empty_to_none(v: Any) -> Any:
-    """Converts empty strings to None."""
-    if v == "":
-        return None
-    return v
+from .validators import empty_to_none
 
 class RepoListQuery(BaseModel):
     """Query parameters for repository list.
