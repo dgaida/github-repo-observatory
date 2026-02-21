@@ -1,10 +1,11 @@
-from typing import List
+from typing import List, Optional
 from .badge_service import BadgeService
 
 class QualityService:
     @staticmethod
-    async def get_quality_tools(owner: str, repo: str) -> List[str]:
-        badges = await BadgeService.get_all_badges(owner, repo)
+    async def get_quality_tools(owner: str, repo: str, badges: Optional[List[str]] = None) -> List[str]:
+        if badges is None:
+            badges = await BadgeService.get_all_badges(owner, repo)
         tools = []
 
         for url in badges:
@@ -25,8 +26,8 @@ class QualityService:
         return tools
 
     @staticmethod
-    async def get_codeql_status(owner: str, repo: str) -> str:
+    async def get_codeql_status(owner: str, repo: str, badges: Optional[List[str]] = None) -> str:
         # Check if CodeQL workflow exists
         # This is a simplified check
-        tools = await QualityService.get_quality_tools(owner, repo)
+        tools = await QualityService.get_quality_tools(owner, repo, badges=badges)
         return "active" if "CodeQL" in tools else "none"

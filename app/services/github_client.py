@@ -117,4 +117,16 @@ class GitHubClient:
         data = await self._get(f"repos/{owner}/{repo}/pages")
         return data.get("html_url")
 
+    @handle_github_api_errors(default_return=None)
+    async def get_latest_release(self, owner: str, repo: str) -> Optional[str]:
+        """Fetch the latest release for a repository."""
+        data = await self._get(f"repos/{owner}/{repo}/releases/latest")
+        return data.get("tag_name")
+
+    @handle_github_api_errors(default_return=None)
+    async def get_latest_tag(self, owner: str, repo: str) -> Optional[str]:
+        """Fetch the latest tag for a repository."""
+        tags = await self._get(f"repos/{owner}/{repo}/tags", params={"per_page": 1})
+        return tags[0]["name"] if tags else None
+
 github_client = GitHubClient()

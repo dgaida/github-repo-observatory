@@ -21,6 +21,27 @@ def test_parse_shield_url():
     coverage = ShieldParser.extract_coverage(url)
     assert coverage == 80.0
 
+def test_extract_version():
+    # Static badge
+    url = "https://img.shields.io/badge/version-1.2.3-blue"
+    version = ShieldParser.extract_version(url)
+    assert version == "1.2.3"
+
+    # 'v' prefix label
+    url = "https://img.shields.io/badge/v-0.1.0-orange"
+    version = ShieldParser.extract_version(url)
+    assert version == "0.1.0"
+
+    # Dynamic GitHub badge should return None (cannot parse version from URL alone)
+    url = "https://img.shields.io/github/v/release/user/repo"
+    version = ShieldParser.extract_version(url)
+    assert version is None
+
+    # Non-version badge
+    url = "https://img.shields.io/badge/license-MIT-blue"
+    version = ShieldParser.extract_version(url)
+    assert version is None
+
 def test_count_failed_tests():
     log = "1 failed, 9 passed in 0.5s"
     count = ActionLogsParser.count_failed_tests(log)

@@ -48,6 +48,11 @@
         <div class="repo-card">
             <div class="repo-name">
                 <a href="{{ repo.html_url }}" target="_blank">{{ repo.full_name }}</a>
+                {% if repo.metrics.version %}
+                <span class="repo-version" style="font-size: 0.8rem; background: #e1f5fe; color: #0288d1; padding: 2px 6px; border-radius: 4px; margin-left: 8px; font-weight: bold; vertical-align: middle;">
+                    v{{ repo.metrics.version }}
+                </span>
+                {% endif %}
                 {% if repo.pages_url %}
                 <span class="pages-link" style="font-size: 0.8rem; margin-left: 10px;">
                     <a href="{{ repo.pages_url }}" target="_blank" title="GitHub Pages">🌐 View Pages</a>

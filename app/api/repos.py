@@ -10,6 +10,7 @@ from ..services.actions_service import ActionsService
 from ..services.coverage_service import CoverageService
 from ..services.quality_service import QualityService
 from ..services.badge_service import BadgeService
+from ..services.version_service import VersionService
 from ..cache.ttl_cache import ttl_cache
 
 router = APIRouter()
@@ -19,17 +20,20 @@ async def fetch_repo_metrics(repo_dict: Dict[str, Any]) -> Repository:
     owner = repo_dict["owner"]["login"]
     name = repo_dict["name"]
 
-    # Fetch metrics in parallel
+    # Fetch badges first as they are used by multiple services
+    badges = await BadgeService.get_all_badges(owner, name)
+
+    # Fetch other metrics in parallel
     (build_status, coverage, quality_tools, codeql_status,
-     badges, last_commit, commit_count, pages_url) = await asyncio.gather(
+     last_commit, commit_count, pages_url, version) = await asyncio.gather(
         ActionsService.get_build_status(owner, name),
-        CoverageService.get_coverage(owner, name),
-        QualityService.get_quality_tools(owner, name),
-        QualityService.get_codeql_status(owner, name),
-        BadgeService.get_all_badges(owner, name),
+        CoverageService.get_coverage(owner, name, badges=badges),
+        QualityService.get_quality_tools(owner, name, badges=badges),
+        QualityService.get_codeql_status(owner, name, badges=badges),
         github_client.get_last_commit(owner, name),
         github_client.get_commit_count(owner, name),
-        github_client.get_pages_url(owner, name) if repo_dict.get("has_pages") else asyncio.sleep(0)
+        github_client.get_pages_url(owner, name) if repo_dict.get("has_pages") else asyncio.sleep(0),
+        VersionService.get_version(owner, name, badges=badges)
     )
 
     last_commit_at = None
@@ -45,7 +49,8 @@ async def fetch_repo_metrics(repo_dict: Dict[str, Any]) -> Repository:
         ),
         last_commit_at=last_commit_at,
         commit_count=commit_count,
-        readme_badges=badges
+        readme_badges=badges,
+        version=version
     )
 
     return Repository(
