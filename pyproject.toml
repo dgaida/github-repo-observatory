@@ -1,6 +1,6 @@
 [project]
 name = "github-repo-observatory"
-version = "0.1.1"
+version = "0.1.2"
 description = "A dashboard for monitoring CI health and code quality across GitHub repositories."
 authors = [
     { name = "dgaida" }
