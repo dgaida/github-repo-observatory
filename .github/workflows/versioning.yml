@@ -28,15 +28,19 @@ jobs:
           import re
           import os
 
-          filepath = "pyproject.toml"
-          if not os.path.exists(filepath):
-              print(f"{filepath} not found")
+          # Update pyproject.toml
+          pyproject_path = "pyproject.toml"
+          if not os.path.exists(pyproject_path):
+              print(f"{pyproject_path} not found")
               exit(1)
 
-          with open(filepath, "r") as f:
+          with open(pyproject_path, "r") as f:
               content = f.read()
 
+          new_version = ""
+
           def increment_version(match):
+              global new_version
               version = match.group(1)
               parts = version.split(".")
               if len(parts) != 3:
@@ -44,25 +48,46 @@ jobs:
               try:
                   major, minor, patch = map(int, parts)
                   patch += 1
-                  return f"version = \"{major}.{minor}.{patch}\""
+                  new_version = f"{major}.{minor}.{patch}"
+                  return f"version = \"{new_version}\""
               except ValueError:
                   return match.group(0)
 
           new_content = re.sub(r"version = \"(\d+\.\d+\.\d+)\"", increment_version, content, count=1)
 
           if new_content == content:
-              print("Version not found or already updated")
+              print("Version not found in pyproject.toml or already updated")
           else:
-              with open(filepath, "w") as f:
+              with open(pyproject_path, "w") as f:
                   f.write(new_content)
-              print("Version incremented successfully")
+              print(f"Version incremented to {new_version} in pyproject.toml")
+
+          # Update README.md badge
+          if new_version:
+              readme_path = "README.md"
+              if os.path.exists(readme_path):
+                  with open(readme_path, "r") as f:
+                      readme_content = f.read()
+
+                  new_readme_content = re.sub(
+                      r"img\.shields\.io/badge/version-\d+\.\d+\.\d+-blue",
+                      f"img.shields.io/badge/version-{new_version}-blue",
+                      readme_content
+                  )
+
+                  if new_readme_content != readme_content:
+                      with open(readme_path, "w") as f:
+                          f.write(new_readme_content)
+                      print(f"Updated version badge in README.md to {new_version}")
+                  else:
+                      print("Version badge not found in README.md or already updated")
           '
 
       - name: Commit and push changes
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git add pyproject.toml
+          git add pyproject.toml README.md
           # Check if there are changes to commit
           if git diff --cached --quiet; then
             echo "No changes to commit"
