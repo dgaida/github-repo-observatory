@@ -1,0 +1,73 @@
+name: Automated Versioning
+
+on:
+  pull_request:
+    types: [closed]
+    branches:
+      - main
+
+jobs:
+  increment-version:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Increment version
+        run: |
+          python -c '
+          import re
+          import os
+
+          filepath = "pyproject.toml"
+          if not os.path.exists(filepath):
+              print(f"{filepath} not found")
+              exit(1)
+
+          with open(filepath, "r") as f:
+              content = f.read()
+
+          def increment_version(match):
+              version = match.group(1)
+              parts = version.split(".")
+              if len(parts) != 3:
+                  return match.group(0)
+              try:
+                  major, minor, patch = map(int, parts)
+                  patch += 1
+                  return f"version = \"{major}.{minor}.{patch}\""
+              except ValueError:
+                  return match.group(0)
+
+          new_content = re.sub(r"version = \"(\d+\.\d+\.\d+)\"", increment_version, content, count=1)
+
+          if new_content == content:
+              print("Version not found or already updated")
+          else:
+              with open(filepath, "w") as f:
+                  f.write(new_content)
+              print("Version incremented successfully")
+          '
+
+      - name: Commit and push changes
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add pyproject.toml
+          # Check if there are changes to commit
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            VERSION=$(grep "^version =" pyproject.toml | cut -d"\"" -f2)
+            git commit -m "chore: increment version to $VERSION"
+            git push
+          fi

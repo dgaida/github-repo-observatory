@@ -37,6 +37,19 @@ class ShieldParser:
         return None
 
     @staticmethod
+    def extract_version(url: str) -> Optional[str]:
+        """Extracts version from a badge URL."""
+        data = ShieldParser.parse_badge_url(url)
+        if not data:
+            return None
+
+        label = data.get("label", "").lower()
+        if label in ["version", "v", "release"]:
+            return data.get("message")
+
+        return None
+
+    @staticmethod
     def extract_coverage(url: str) -> Optional[float]:
         """Extracts coverage percentage from a badge URL."""
         data = ShieldParser.parse_badge_url(url)

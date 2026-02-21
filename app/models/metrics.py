@@ -23,6 +23,7 @@ class RepoMetrics(BaseModel):
     last_commit_at: Optional[str] = None
     commit_count: Optional[int] = Field(None, ge=0)
     readme_badges: List[str] = Field(default_factory=list)
+    version: Optional[str] = None
 
     @field_validator('last_commit_at')
     @classmethod
