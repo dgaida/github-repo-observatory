@@ -1,6 +1,6 @@
 # GitHub Repo Observatory
 
-[![version](https://img.shields.io/badge/version-0.1.2-blue)](https://github.com/dgaida/github-repo-observatory)
+[![Version](https://img.shields.io/github/v/tag/dgaida/github-repo-observatory?label=version)](https://github.com/dgaida/github-repo-observatory/tags)
 [![codecov](https://codecov.io/gh/dgaida/github-repo-observatory/branch/main/graph/badge.svg)](https://codecov.io/gh/dgaida/github-repo-observatory)
 [![tests](https://github.com/dgaida/github-repo-observatory/actions/workflows/ci.yml/badge.svg)](https://github.com/dgaida/github-repo-observatory/actions/workflows/ci.yml)
 [![codeql](https://github.com/dgaida/github-repo-observatory/actions/workflows/codeql.yml/badge.svg)](https://github.com/dgaida/github-repo-observatory/actions/workflows/codeql.yml)
