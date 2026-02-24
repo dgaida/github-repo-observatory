@@ -1,6 +1,6 @@
 # GitHub Repo Observatory
 
-[![Version](https://img.shields.io/github/v/tag/dgaida/github-repo-observatory?label=version)](https://github.com/dgaida/github-repo-observatory/tags)
+![Version](https://img.shields.io/badge/version-0.1.2-blue)
 [![codecov](https://codecov.io/gh/dgaida/github-repo-observatory/branch/main/graph/badge.svg)](https://codecov.io/gh/dgaida/github-repo-observatory)
 [![tests](https://github.com/dgaida/github-repo-observatory/actions/workflows/ci.yml/badge.svg)](https://github.com/dgaida/github-repo-observatory/actions/workflows/ci.yml)
 [![codeql](https://github.com/dgaida/github-repo-observatory/actions/workflows/codeql.yml/badge.svg)](https://github.com/dgaida/github-repo-observatory/actions/workflows/codeql.yml)
@@ -8,6 +8,10 @@
 [![python](https://img.shields.io/badge/python-3.10%2B-blue)](https://github.com/dgaida/github-repo-observatory)
 [![license](https://img.shields.io/badge/license-MIT-blue)](https://github.com/dgaida/github-repo-observatory/blob/main/LICENSE)
 [![code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Docs](https://img.shields.io/badge/docs-GitHub%20Pages-blue)](https://dgaida.github.io/github-repo-observatory/)
+[![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://github.com/dgaida/github-repo-observatory/graphs/commit-activity)
+![Last commit](https://img.shields.io/github/last-commit/dgaida/github-repo-observatory)
 
 **One-line description**: Monitor CI health, test coverage, and code quality across all your GitHub repos in a single dashboard.
 
